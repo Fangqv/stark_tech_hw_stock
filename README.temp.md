@@ -34,6 +34,10 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 
 ![snapshot.1.png](./snapshots/snapshot.1.png)
 
+14. 🚧 我准备实现一下底部的滚动条
+15. 🚧 我觉得可以让底部的滚动条和上面的 chart 同步一下高亮状态
+16. 🚧 我准备让 cursor 根据 PRD 和 statementdog 的需求, 再次帮我实现一下
+
 ## 技术栈
 
 - TypeScript
@@ -46,6 +50,7 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 
 - React 理解
 - 项目结构理解
+- 组件理解 & 拆分 & 重构
 
 ## TODO
 
@@ -55,3 +60,4 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 - [ ] 深色模式
 - [ ] 部署至腾讯云
 - [ ] UI 美化
+- [ ] 在提交前在阅读一遍 notion 上的 PRD, 看看还有没有什么疏漏
