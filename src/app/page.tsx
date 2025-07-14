@@ -88,9 +88,9 @@ export default function Home() {
               Stark Tech
             </Typography>
           </Container>
-          <Box sx={{ flex: 1, paddingTop: 2, paddingBottom: 2 }}>
+          <Container sx={{ paddingTop: 2, paddingBottom: 2 }} maxWidth="sm">
             <StockSearch onStockSelect={handleStockSelect} />
-          </Box>
+          </Container>
           <Box sx={{ flex: 1 }} />
         </Box>
       </AppBar>

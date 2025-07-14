@@ -8,7 +8,12 @@
 
 ## 启动说明
 
-🚧 WIP 🚧
+```bash
+git clone https://github.com/HaloWang/stark_tech_hw_stock.git
+cd stark_tech_hw_stock
+npm install
+npm run dev
+```
 
 ## 工作历史记录
 
@@ -27,16 +32,23 @@
 
 ![snapshot.0.png](./snapshots/snapshot.0.png)
 
-11. 我发现 gemini-cli 不允许上传图片: `[API Error: {"error":{"message":"{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Unable to process input image. Please retry or report in 
+11. 我发现 gemini-cli 不允许上传图片: `[API Error: {"error":{"message":"{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Unable to process input image. Please retry or report in
 https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n","code":400,"status":"Bad Request"}}]`
 12. 发现 finmindtrade 的 API 报 `402` 了, 申请了 API key, 并添加到 `.env.local` 文件中
 13. 我和 Cursor IDE 说: "按照 @statementdog.png 文件中的需求完成整个项目", 我得到了 snapshot.1.png 文件
 
 ![snapshot.1.png](./snapshots/snapshot.1.png)
 
-14. 🚧 我准备实现一下底部的滚动条
-15. 🚧 我觉得可以让底部的滚动条和上面的 chart 同步一下高亮状态
-16. 🚧 我准备让 cursor 根据 PRD 和 statementdog 的需求, 再次帮我实现一下
+14. 和 Cursor 大量沟通后, 我得到了 snapshot.2.png 文件
+
+![snapshot.2.png](./snapshots/snapshot.2.png)
+
+15. 我认为我必须要人工 coding 一下代码了, cursor 已经开始丢失上下文了
+    1.  BUG: 数据和 statementdog 不一致, 出现了错位和丢失
+    2.  PRD: 文本需求和图片需求冲突 (单月营收年增率 or 月均價)
+        1.  如果都渲染, 那么交互还需要调整
+    3.  UI 调整一下
+    4.  代码风格
 
 ## 技术栈
 
@@ -48,19 +60,11 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 
 ## 涉及技术问题
 
-- React 理解
-- 项目结构理解
-- 组件理解 & 拆分 & 重构
-- 函数式组件的生命周期
-- 函数式组件中声明的函数, 在每次渲染时, 都会被重新声明吗?
-- MUI 中 `Box` 和 `Container` 的区别是什么?
+[Questions.md](./Questions.md)
 
 ## TODO
 
 - [ ] 了解到合作伙伴期望看到结构较好的组件分层, 让我来做一下
-- [ ] 最后请一定核对一下 PRD 和 statementdog, 确保没有 Bug
-- [ ] 多语言
-- [ ] 深色模式
-- [ ] 部署至腾讯云
-- [ ] UI 美化
+- [ ] 最后请一定核对一下 PRD 和 statementdog, 确保没有数据上的 Bug
 - [ ] 在提交前在阅读一遍 notion 上的 PRD, 看看还有没有什么疏漏
+- [ ] 部署至腾讯云
