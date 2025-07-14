@@ -50,3 +50,4 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 ## TODO
 
 - [ ] 了解到合作伙伴期望看到结构较好的组件分层, 让我来做一下
+- [ ] 最后请一定核对一下 PRD 和 statementdog, 确保没有 Bug
