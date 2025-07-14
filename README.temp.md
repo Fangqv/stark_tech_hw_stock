@@ -23,6 +23,7 @@
 9. 优先选组 Zustand 作为状态管理
    1. 了解到 [openai 的前端项目](https://github.com/openai/openai-fm)在使用 Zustand
    2. 感知到 Zustand 可能为当前前端业界跨组建状态管理的首选方案
+10. 我和 gemini 说 "给我添加 MUI 依赖", 但是, 我发现 gemini 直接根据 `GEMINI.md` 把项目的逻辑写好了, 我非常震惊
 
 ## 技术栈
 
