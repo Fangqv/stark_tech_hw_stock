@@ -18,7 +18,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
   Chip,
   Button,
 } from '@mui/material'
@@ -33,7 +32,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface Stock {
   stock_id: string
@@ -95,20 +94,13 @@ function TabPanel(props: TabPanelProps) {
 
 export default function FinancialStatement({ stock }: FinancialStatementProps) {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
-  const [stockPriceData, setStockPriceData] = useState<StockPriceData[]>([])
   const [composedData, setComposedData] = useState<ComposedData[]>([])
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null)
   const [tabValue, setTabValue] = useState(0)
   const [timeRange, setTimeRange] = useState('5')
   const [isTracked, setIsTracked] = useState(false)
 
-  useEffect(() => {
-    if (stock) {
-      fetchData()
-    }
-  }, [stock, timeRange])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!stock) return
 
     try {
@@ -116,15 +108,17 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
       startDate.setFullYear(startDate.getFullYear() - parseInt(timeRange))
       const startDateStr = startDate.toISOString().slice(0, 10)
 
+      const apiToken = process.env.NEXT_PUBLIC_FINMIND_API_TOKEN
+
       // 获取营收数据
       const revenueResponse = await fetch(
-        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMonthRevenue&data_id=${stock.stock_id}&start_date=${startDateStr}`,
+        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMonthRevenue&data_id=${stock.stock_id}&start_date=${startDateStr}&token=${apiToken}`,
       )
       const revenueResult = await revenueResponse.json()
 
       // 获取股价数据
       const priceResponse = await fetch(
-        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.stock_id}&start_date=${startDateStr}`,
+        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.stock_id}&start_date=${startDateStr}&token=${apiToken}`,
       )
       const priceResult = await priceResponse.json()
 
@@ -134,7 +128,6 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
 
         if (priceResult.msg === 'success') {
           const prices = priceResult.data
-          setStockPriceData(prices)
 
           // 模拟当前股票信息
           const latestPrice = prices[prices.length - 1]
@@ -162,7 +155,13 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
     } catch (error) {
       console.error('Error fetching data:', error)
     }
-  }
+  }, [stock, timeRange])
+
+  useEffect(() => {
+    if (stock) {
+      fetchData()
+    }
+  }, [stock, timeRange, fetchData])
 
   const combineDataForChart = (
     revenues: RevenueData[],
@@ -189,7 +188,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
 
     // 组合营收和价格数据
     return revenues
-      .map((revenue, index) => {
+      .map((revenue) => {
         const month = revenue.date.slice(0, 7)
         const avgPrice = monthlyAvgPrices.get(month) || 0
 
@@ -335,11 +334,13 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
                   <YAxis yAxisId="left" orientation="left" />
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip
-                    formatter={(value: any, name: string) => {
+                    formatter={(value: number | string, name: string) => {
+                      const numValue =
+                        typeof value === 'string' ? parseFloat(value) : value
                       if (name === 'revenue')
-                        return [`${formatRevenue(value)} 億`, '每月營收']
+                        return [`${formatRevenue(numValue)} 億`, '每月營收']
                       if (name === 'avgPrice')
-                        return [`${formatPrice(value)} 元`, '月均價']
+                        return [`${formatPrice(numValue)} 元`, '月均價']
                       return [value, name]
                     }}
                   />
