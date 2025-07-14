@@ -7,7 +7,6 @@ import {
   Container,
   CssBaseline,
   AppBar,
-  Toolbar,
   Typography,
   Box,
   ThemeProvider,
