@@ -27,6 +27,10 @@ const theme = createTheme({
     secondary: {
       main: '#dc004e',
     },
+    background: {
+      default: '#f5f5f5', // 浅灰色背景
+      paper: '#ffffff', // 白色纸张背景
+    },
   },
   typography: {
     h4: {
@@ -47,42 +51,37 @@ export default function Home() {
 
   return (
     <ThemeProvider theme={theme}>
+      {/* ✅ 是一个副作用组件, 它不是一个容器组件, 当它被渲染是, 会自动在页面的 head 注入全局 CSS 样式*/}
       <CssBaseline />
       <AppBar
-        position="static"
+        position="fixed"
         elevation={0}
-        sx={{ backgroundColor: '#f5f5f5', color: 'text.primary' }}
+        sx={{ backgroundColor: 'background.paper', color: 'text.primary' }}
       >
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, color: '#1976d2', fontWeight: 'bold' }}
-          >
-            財報狗 - 台股財務數據平台
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            sx={{ color: '#333', mb: 1 }}
-          >
-            股票財務報表查詢
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            選擇股票查看詳細的營收數據和財務指標
-          </Typography>
-
-          <Box sx={{ maxWidth: 600, mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexGrow: 1,
+          }}
+        >
+          <Container sx={{ flex: 1 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ flexGrow: 1, color: '#1976d2', fontWeight: 'bold' }}
+            >
+              Stark Tech
+            </Typography>
+          </Container>
+          <Box sx={{ flex: 1, paddingTop: 2, paddingBottom: 2 }}>
             <StockSearch onStockSelect={handleStockSelect} />
           </Box>
+          <Box sx={{ flex: 1 }} />
         </Box>
+      </AppBar>
 
+      <Container maxWidth="md" sx={{ mt: 14, mb: 4 }}>
         <FinancialStatement stock={selectedStock} />
       </Container>
     </ThemeProvider>

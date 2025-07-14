@@ -34,6 +34,9 @@ import {
 } from 'recharts'
 import { useEffect, useState, useCallback } from 'react'
 
+/**
+ * 股票基础信息
+ */
 interface Stock {
   stock_id: string
   stock_name: string
@@ -92,13 +95,67 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
+const formatPrice = (value: number) => {
+  return new Intl.NumberFormat('zh-TW', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+/**
+ * 股票标题和基本信息
+ */
+const StockHeader = ({
+  stock,
+  stockInfo,
+}: {
+  stock: Stock
+  stockInfo: StockInfo | null
+}) => {
+  const [isTracked, setIsTracked] = useState(false)
+
+  return (
+    <Card sx={{ mt: 1, p: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5" component="h2">
+            {stock.stock_name} ({stock.stock_id})
+          </Typography>
+          {stockInfo && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h6">
+                台灣{' '}
+                {new Date().toLocaleDateString('zh-TW', {
+                  month: '2-digit',
+                  day: '2-digit',
+                })}{' '}
+                收盤價 {formatPrice(stockInfo.current_price)} 元
+              </Typography>
+              <Chip
+                label={`${stockInfo.change >= 0 ? '+' : ''}${stockInfo.change.toFixed(2)} (${stockInfo.change_percent.toFixed(2)}%)`}
+                color={stockInfo.change >= 0 ? 'success' : 'error'}
+                size="small"
+              />
+            </Box>
+          )}
+        </Box>
+      </Box>
+    </Card>
+  )
+}
+
 export default function FinancialStatement({ stock }: FinancialStatementProps) {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
   const [composedData, setComposedData] = useState<ComposedData[]>([])
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null)
   const [tabValue, setTabValue] = useState(0)
   const [timeRange, setTimeRange] = useState('5')
-  const [isTracked, setIsTracked] = useState(false)
 
   const fetchData = useCallback(async () => {
     if (!stock) return
@@ -227,13 +284,6 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
     }).format(value)
   }
 
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('zh-TW', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
-
   if (!stock) {
     return (
       <Card sx={{ mt: 2 }}>
@@ -247,78 +297,40 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
   }
 
   return (
-    <Card sx={{ mt: 2 }}>
-      <CardContent>
-        {/* 股票标题和基本信息 */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h5" component="h2">
-              {stock.stock_name} ({stock.stock_id})
-            </Typography>
-            {stockInfo && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h6">
-                  台灣{' '}
-                  {new Date().toLocaleDateString('zh-TW', {
-                    month: '2-digit',
-                    day: '2-digit',
-                  })}{' '}
-                  收盤價 {formatPrice(stockInfo.current_price)} 元
-                </Typography>
-                <Chip
-                  label={`${stockInfo.change >= 0 ? '+' : ''}${stockInfo.change.toFixed(2)} (${stockInfo.change_percent.toFixed(2)}%)`}
-                  color={stockInfo.change >= 0 ? 'success' : 'error'}
-                  size="small"
-                />
+    <>
+      {/* 股票标题和基本信息 */}
+      <StockHeader stock={stock} stockInfo={stockInfo} />
+
+      {composedData.length > 0 ? (
+        <>
+          <Card sx={{ mt: 2 }}>
+            <CardContent>
+              {/* Tab選項和時間選擇器 */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                }}
+              >
+                <Button variant="contained" size="large" disableElevation>
+                  每月營收
+                </Button>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>時間範圍</InputLabel>
+                  <Select
+                    value={timeRange}
+                    label="時間範圍"
+                    onChange={(e) => setTimeRange(e.target.value)}
+                  >
+                    <MenuItem value="1">近 1 年</MenuItem>
+                    <MenuItem value="3">近 3 年</MenuItem>
+                    <MenuItem value="5">近 5 年</MenuItem>
+                    <MenuItem value="10">近 10 年</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
-            )}
-          </Box>
-          <Button
-            variant={isTracked ? 'contained' : 'outlined'}
-            onClick={() => setIsTracked(!isTracked)}
-          >
-            {isTracked ? '已追蹤' : '追蹤'}
-          </Button>
-        </Box>
-
-        {/* Tab選項和時間選擇器 */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-          }}
-        >
-          <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label="每月營收" />
-            <Tab label="月每股營收" />
-          </Tabs>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>時間範圍</InputLabel>
-            <Select
-              value={timeRange}
-              label="時間範圍"
-              onChange={(e) => setTimeRange(e.target.value)}
-            >
-              <MenuItem value="1">近 1 年</MenuItem>
-              <MenuItem value="3">近 3 年</MenuItem>
-              <MenuItem value="5">近 5 年</MenuItem>
-              <MenuItem value="10">近 10 年</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        <TabPanel value={tabValue} index={0}>
-          {composedData.length > 0 ? (
-            <>
               {/* 復合圖表 */}
               <ResponsiveContainer width="100%" height={400}>
                 <ComposedChart
@@ -361,72 +373,70 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
                   />
                 </ComposedChart>
               </ResponsiveContainer>
-
+            </CardContent>
+          </Card>
+          <Card sx={{ mt: 2 }}>
+            <CardContent>
               {/* 詳細數據表格 */}
-              <Box sx={{ mt: 3 }}>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <Button variant="contained" size="small">
-                    詳細數據
-                  </Button>
-                  <Button variant="outlined" size="small">
-                    指標解釋
-                  </Button>
-                </Box>
-                <TableContainer component={Paper}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>年度/月份</TableCell>
-                        <TableCell align="right">每月營收</TableCell>
-                        <TableCell align="right">單月營收年增率 (%)</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {revenueData.slice(-12).map((row) => {
-                        const revenueGrowth =
-                          composedData.find(
-                            (d) => d.month === row.date.slice(0, 7),
-                          )?.revenueGrowth || 0
-                        return (
-                          <TableRow key={row.date}>
-                            <TableCell>{row.date.slice(0, 7)}</TableCell>
-                            <TableCell align="right">
-                              {formatRevenue(row.revenue)}
-                            </TableCell>
-                            <TableCell
-                              align="right"
-                              sx={{
-                                color: revenueGrowth >= 0 ? 'green' : 'red',
-                              }}
-                            >
-                              {revenueGrowth.toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 1, display: 'block' }}
-                >
-                  表格單位：千元，數據來自公開資訊觀測站
-                  <br />
-                  網頁圖表數據僅供引用，請註明出處為財報狗
-                </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Button variant="contained" size="large" disableElevation>
+                  詳細數據
+                </Button>
               </Box>
-            </>
-          ) : (
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>年度/月份</TableCell>
+                      <TableCell align="right">每月營收</TableCell>
+                      <TableCell align="right">單月營收年增率 (%)</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {revenueData.slice(-12).map((row) => {
+                      const revenueGrowth =
+                        composedData.find(
+                          (d) => d.month === row.date.slice(0, 7),
+                        )?.revenueGrowth || 0
+                      return (
+                        <TableRow key={row.date}>
+                          <TableCell>{row.date.slice(0, 7)}</TableCell>
+                          <TableCell align="right">
+                            {formatRevenue(row.revenue)}
+                          </TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{
+                              color: revenueGrowth >= 0 ? 'green' : 'red',
+                            }}
+                          >
+                            {revenueGrowth.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1, display: 'block' }}
+              >
+                表格單位：千元，數據來自公開資訊觀測站
+                <br />
+                網頁圖表數據僅供引用，請註明出處為財報狗
+              </Typography>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card sx={{ mt: 2 }}>
+          <CardContent>
             <Typography>載入中...</Typography>
-          )}
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <Typography>月每股營收功能開發中...</Typography>
-        </TabPanel>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+    </>
   )
 }

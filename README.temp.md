@@ -51,6 +51,9 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 - React 理解
 - 项目结构理解
 - 组件理解 & 拆分 & 重构
+- 函数式组件的生命周期
+- 函数式组件中声明的函数, 在每次渲染时, 都会被重新声明吗?
+- MUI 中 `Box` 和 `Container` 的区别是什么?
 
 ## TODO
 

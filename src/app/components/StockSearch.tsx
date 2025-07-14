@@ -6,7 +6,9 @@ import {
   CircularProgress,
   Box,
   Chip,
+  InputAdornment,
 } from '@mui/material'
+import SearchIcon from '@mui/icons-material/Search'
 import { useEffect, useState } from 'react'
 
 interface Stock {
@@ -59,89 +61,70 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Autocomplete
-        options={stocks}
-        getOptionLabel={(option) => `${option.stock_id} ${option.stock_name}`}
-        value={selectedStock}
-        onChange={handleStockChange}
-        loading={loading}
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-        filterOptions={(options, { inputValue }) => {
-          return options.filter(
-            (option) =>
-              option.stock_id
-                .toLowerCase()
-                .includes(inputValue.toLowerCase()) ||
-              option.stock_name
-                .toLowerCase()
-                .includes(inputValue.toLowerCase()),
-          )
-        }}
-        renderOption={(props, option) => {
-          const { key, ...rest } = props
-          return (
-            <Box
-              component="li"
-              key={key}
-              {...rest}
-              sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}
-            >
-              <Box>
-                <Chip
-                  label={option.stock_id}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                  sx={{ mr: 1, minWidth: 60 }}
-                />
-                {option.stock_name}
-              </Box>
+    <Autocomplete
+      options={stocks}
+      getOptionLabel={(option) => `${option.stock_id} ${option.stock_name}`}
+      value={selectedStock}
+      onChange={handleStockChange}
+      loading={loading}
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      filterOptions={(options, { inputValue }) => {
+        return options.filter(
+          (option) =>
+            option.stock_id.toLowerCase().includes(inputValue.toLowerCase()) ||
+            option.stock_name.toLowerCase().includes(inputValue.toLowerCase()),
+        )
+      }}
+      // 渲染选项
+      renderOption={(props, option) => {
+        const { key, ...rest } = props
+        return (
+          <Box
+            component="li"
+            key={key}
+            {...rest}
+            sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}
+          >
+            <Box>
+              <Chip
+                label={option.stock_id}
+                size="small"
+                color="primary"
+                variant="outlined"
+                sx={{ mr: 1, minWidth: 60 }}
+              />
+              {option.stock_name}
             </Box>
-          )
-        }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="搜尋股票代號或名稱"
-            placeholder="例如：2330 台積電"
-            variant="outlined"
-            fullWidth
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {loading ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
-            }}
-          />
-        )}
-        noOptionsText="找不到匹配的股票"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'white',
-          },
-        }}
-      />
-
-      {selectedStock && (
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip
-            label={`已選擇: ${selectedStock.stock_id} ${selectedStock.stock_name}`}
-            color="primary"
-            onDelete={() => {
-              setSelectedStock(null)
-              onStockSelect(null)
-            }}
-          />
-        </Box>
+          </Box>
+        )
+      }}
+      // 渲染输入框
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="输入台 / 美股票代码, 查看公司财报"
+          placeholder="例如：2330 台積電"
+          variant="outlined"
+          fullWidth
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <InputAdornment position="end">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       )}
-    </Box>
+      noOptionsText="找不到匹配的股票"
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: 'background.paper',
+          // height: 50,
+        },
+      }}
+    />
   )
 }
