@@ -56,7 +56,14 @@ export default function Home() {
       <AppBar
         position="fixed"
         elevation={0}
-        sx={{ backgroundColor: 'background.paper', color: 'text.primary' }}
+        sx={{
+          backgroundColor: '#FFFFFFA0',
+          backdropFilter: 'blur(20px)',
+          color: 'text.primary',
+          display: 'flex',
+          justifyContent: 'center',
+          borderBottom: '1px solid #e0e0e0',
+        }}
       >
         <Box
           sx={{
@@ -65,7 +72,14 @@ export default function Home() {
             flexGrow: 1,
           }}
         >
-          <Container sx={{ flex: 1 }}>
+          <Container
+            sx={{
+              flex: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Typography
               variant="h6"
               component="div"

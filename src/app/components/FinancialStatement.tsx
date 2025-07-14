@@ -73,26 +73,11 @@ interface FinancialStatementProps {
   stock: Stock | null
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  )
+const formatRevenue = (value: number) => {
+  return new Intl.NumberFormat('zh-TW', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 const formatPrice = (value: number) => {
@@ -112,10 +97,8 @@ const StockHeader = ({
   stock: Stock
   stockInfo: StockInfo | null
 }) => {
-  const [isTracked, setIsTracked] = useState(false)
-
   return (
-    <Card sx={{ mt: 1, p: 2 }}>
+    <Card elevation={0} sx={{ mt: 1, p: 2, border: '1px solid #e0e0e0' }}>
       <Box
         sx={{
           display: 'flex',
@@ -154,8 +137,13 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
   const [composedData, setComposedData] = useState<ComposedData[]>([])
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null)
-  const [tabValue, setTabValue] = useState(0)
   const [timeRange, setTimeRange] = useState('5')
+  const [selectedData, setSelectedData] = useState({
+    revenue: true,
+    avgPrice: true,
+    revenueGrowth: false,
+  })
+  const [selectionOrder, setSelectionOrder] = useState(['revenue', 'avgPrice'])
 
   const fetchData = useCallback(async () => {
     if (!stock) return
@@ -244,49 +232,114 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
     })
 
     // 组合营收和价格数据
-    return revenues
-      .map((revenue) => {
-        const month = revenue.date.slice(0, 7)
-        const avgPrice = monthlyAvgPrices.get(month) || 0
+    const result = revenues.map((revenue) => {
+      const month = revenue.date.slice(0, 7)
+      const avgPrice = monthlyAvgPrices.get(month) || 0
 
-        // 计算年增率
-        const previousYearRevenue = revenues.find((r) => {
-          const currentYear = parseInt(revenue.date.slice(0, 4))
-          const currentMonth = revenue.date.slice(5, 7)
-          const targetDate = `${currentYear - 1}-${currentMonth}`
-          return r.date.startsWith(targetDate)
-        })
-
-        const revenueGrowth = previousYearRevenue
-          ? ((revenue.revenue - previousYearRevenue.revenue) /
-              previousYearRevenue.revenue) *
-            100
-          : 0
-
-        return {
-          month: revenue.date.slice(0, 7),
-          revenue: revenue.revenue / 1000000, // 转换为百万
-          avgPrice: Math.round(avgPrice),
-          revenueGrowth: Math.round(revenueGrowth * 100) / 100,
-        }
+      // 计算年增率
+      const previousYearRevenue = revenues.find((r) => {
+        const currentYear = parseInt(revenue.date.slice(0, 4))
+        const currentMonth = revenue.date.slice(5, 7)
+        const targetDate = `${currentYear - 1}-${currentMonth}`
+        return r.date.startsWith(targetDate)
       })
-      .slice(-60) // 最近5年数据
+
+      const revenueGrowth = previousYearRevenue
+        ? ((revenue.revenue - previousYearRevenue.revenue) /
+            previousYearRevenue.revenue) *
+          100
+        : 0
+
+      return {
+        month: revenue.date.slice(0, 7),
+        revenue: revenue.revenue / 1_000_000, // 保持千元單位，不進行轉換
+        avgPrice: Math.round(avgPrice),
+        revenueGrowth: Math.round(revenueGrowth * 100) / 100,
+      }
+    })
+
+    // 根据时间范围动态确定显示的月份数量
+    const monthsToShow = parseInt(timeRange) * 12
+    return result.slice(-monthsToShow)
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue)
+  // 格式化X轴显示
+  const formatXAxisTick = (tickItem: string) => {
+    const timeRangeNum = parseInt(timeRange)
+    const [year, month] = tickItem.split('-')
+
+    if (timeRangeNum === 1) {
+      // 1年：显示月份 (01, 02, 03...)
+      return month
+    } else if (timeRangeNum <= 3) {
+      // 2-3年：显示季度 (Q1, Q2, Q3, Q4)
+      const monthNum = parseInt(month)
+      const quarter = Math.ceil(monthNum / 3)
+      return `Q${quarter}`
+    } else {
+      // 4年以上：显示年份 (2024, 2025...)
+      return year
+    }
   }
 
-  const formatRevenue = (value: number) => {
-    return new Intl.NumberFormat('zh-TW', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
+  // 获取当前时间聚合级别的标签
+  const getTimeLabel = () => {
+    const timeRangeNum = parseInt(timeRange)
+    if (timeRangeNum === 1) return '每月營收'
+    if (timeRangeNum <= 3) return '每季營收'
+    return '每年營收'
+  }
+
+  const getRevenueGrowthLabel = () => {
+    const timeRangeNum = parseInt(timeRange)
+    if (timeRangeNum === 1) return '單月營收年增率'
+    if (timeRangeNum <= 3) return '單季營收年增率'
+    return '單年營收年增率'
+  }
+
+  const getPriceLabel = () => {
+    const timeRangeNum = parseInt(timeRange)
+    if (timeRangeNum === 1) return '月均價'
+    if (timeRangeNum <= 3) return '季均價'
+    return '年均價'
+  }
+
+  const handleDataToggle = (dataType: keyof typeof selectedData) => {
+    const newSelected = { ...selectedData }
+    const newOrder = [...selectionOrder]
+
+    if (newSelected[dataType]) {
+      // 如果当前数据已选中，则取消选择
+      newSelected[dataType] = false
+      const index = newOrder.indexOf(dataType)
+      if (index > -1) {
+        newOrder.splice(index, 1)
+      }
+
+      // 确保至少有一个数据被选中
+      if (newOrder.length === 0) {
+        newSelected[dataType] = true
+        newOrder.push(dataType)
+      }
+    } else {
+      // 如果当前数据未选中，则选择它
+      newSelected[dataType] = true
+      newOrder.push(dataType)
+
+      // 如果超过两个选择，移除最旧的选择
+      if (newOrder.length > 2) {
+        const oldestData = newOrder.shift()!
+        newSelected[oldestData as keyof typeof selectedData] = false
+      }
+    }
+
+    setSelectedData(newSelected)
+    setSelectionOrder(newOrder)
   }
 
   if (!stock) {
     return (
-      <Card sx={{ mt: 2 }}>
+      <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
         <CardContent>
           <Typography variant="h6" color="text.secondary">
             請選擇一個股票查看財務資料
@@ -303,7 +356,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
 
       {composedData.length > 0 ? (
         <>
-          <Card sx={{ mt: 2 }}>
+          <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
             <CardContent>
               {/* Tab選項和時間選擇器 */}
               <Box
@@ -342,86 +395,227 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
                     dataKey="month"
                     tick={{ fontSize: 12 }}
                     interval="preserveStartEnd"
+                    tickFormatter={formatXAxisTick}
                   />
                   <YAxis yAxisId="left" orientation="left" />
                   <YAxis yAxisId="right" orientation="right" />
+                  <YAxis yAxisId="third" orientation="right" />
                   <Tooltip
                     formatter={(value: number | string, name: string) => {
                       const numValue =
                         typeof value === 'string' ? parseFloat(value) : value
                       if (name === 'revenue')
-                        return [`${formatRevenue(numValue)} 億`, '每月營收']
+                        return [`${formatRevenue(numValue)} 千元`, '每月營收']
                       if (name === 'avgPrice')
                         return [`${formatPrice(numValue)} 元`, '月均價']
+                      if (name === 'revenueGrowth')
+                        return [`${numValue.toFixed(2)}%`, '單月營收年增率']
                       return [value, name]
                     }}
                   />
                   <Legend />
-                  <Bar
-                    yAxisId="left"
-                    dataKey="revenue"
-                    fill="#ffa726"
-                    name="每月營收"
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="avgPrice"
-                    stroke="#d32f2f"
-                    strokeWidth={2}
-                    name="月均價"
-                  />
+                  {selectedData.revenue && (
+                    <Bar
+                      yAxisId="left"
+                      dataKey="revenue"
+                      fill="#ffa726"
+                      name="每月營收"
+                    />
+                  )}
+                  {selectedData.avgPrice && (
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="avgPrice"
+                      stroke="#d32f2f"
+                      strokeWidth={2}
+                      name="月均價"
+                    />
+                  )}
+                  {selectedData.revenueGrowth && (
+                    <Line
+                      yAxisId="third"
+                      type="monotone"
+                      dataKey="revenueGrowth"
+                      stroke="#1976d2"
+                      strokeWidth={2}
+                      name="單月營收年增率"
+                      dot={{ fill: '#1976d2', strokeWidth: 2, r: 4 }}
+                    />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
+
+              {/* 數據選擇器 */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  mt: 2,
+                  justifyContent: 'center',
+                }}
+              >
+                <Button
+                  disableElevation
+                  variant={selectedData.revenue ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => handleDataToggle('revenue')}
+                  sx={{ minWidth: 100 }}
+                >
+                  每月營收
+                </Button>
+                <Button
+                  disableElevation
+                  variant={selectedData.avgPrice ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => handleDataToggle('avgPrice')}
+                  sx={{ minWidth: 100 }}
+                >
+                  月均價
+                </Button>
+                <Button
+                  disableElevation
+                  variant={
+                    selectedData.revenueGrowth ? 'contained' : 'outlined'
+                  }
+                  size="small"
+                  onClick={() => handleDataToggle('revenueGrowth')}
+                  sx={{ minWidth: 100 }}
+                >
+                  營收年增率
+                </Button>
+              </Box>
             </CardContent>
           </Card>
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
+          <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                p: 0,
+              }}
+            >
               {/* 詳細數據表格 */}
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, ml: 2, mt: 2 }}>
                 <Button variant="contained" size="large" disableElevation>
                   詳細數據
                 </Button>
               </Box>
-              <TableContainer component={Paper}>
-                <Table size="small">
+              <TableContainer
+                component={Paper}
+                sx={{
+                  boxShadow: 'none',
+                  overflowX: 'auto',
+                  maxWidth: '100%',
+                }}
+              >
+                <Table size="small" sx={{ boxShadow: 'none', minWidth: 800 }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>年度/月份</TableCell>
-                      <TableCell align="right">每月營收</TableCell>
-                      <TableCell align="right">單月營收年增率 (%)</TableCell>
+                      <TableCell
+                        sx={{
+                          minWidth: 120,
+                          fontWeight: 'bold',
+                          position: 'sticky',
+                          left: 0,
+                          backgroundColor: 'white',
+                          zIndex: 1,
+                          borderRight: '1px solid #e0e0e0',
+                        }}
+                      >
+                        指標
+                      </TableCell>
+                      {composedData.map((data) => (
+                        <TableCell
+                          key={data.month}
+                          align="right"
+                          sx={{ minWidth: 100, fontWeight: 'bold' }}
+                        >
+                          {data.month}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {revenueData.slice(-12).map((row) => {
-                      const revenueGrowth =
-                        composedData.find(
-                          (d) => d.month === row.date.slice(0, 7),
-                        )?.revenueGrowth || 0
-                      return (
-                        <TableRow key={row.date}>
-                          <TableCell>{row.date.slice(0, 7)}</TableCell>
-                          <TableCell align="right">
-                            {formatRevenue(row.revenue)}
-                          </TableCell>
-                          <TableCell
-                            align="right"
-                            sx={{
-                              color: revenueGrowth >= 0 ? 'green' : 'red',
-                            }}
-                          >
-                            {revenueGrowth.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
+                    {/* 營收行 */}
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontWeight: 'bold',
+                          position: 'sticky',
+                          left: 0,
+                          backgroundColor: 'white',
+                          zIndex: 1,
+                          borderRight: '1px solid #e0e0e0',
+                        }}
+                      >
+                        {getTimeLabel()} (千元)
+                      </TableCell>
+                      {composedData.map((data) => (
+                        <TableCell key={`revenue-${data.month}`} align="right">
+                          {formatRevenue(data.revenue * 1_000_000)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {/* 營收年增率行 */}
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontWeight: 'bold',
+                          position: 'sticky',
+                          left: 0,
+                          backgroundColor: 'white',
+                          zIndex: 1,
+                          borderRight: '1px solid #e0e0e0',
+                        }}
+                      >
+                        {getRevenueGrowthLabel()} (%)
+                      </TableCell>
+                      {composedData.map((data) => (
+                        <TableCell
+                          key={`growth-${data.month}`}
+                          align="right"
+                          sx={{
+                            color: data.revenueGrowth >= 0 ? 'green' : 'red',
+                          }}
+                        >
+                          {data.revenueGrowth.toFixed(2)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {/* 均價行 */}
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontWeight: 'bold',
+                          position: 'sticky',
+                          left: 0,
+                          backgroundColor: 'white',
+                          zIndex: 1,
+                          borderRight: '1px solid #e0e0e0',
+                        }}
+                      >
+                        {getPriceLabel()} (元)
+                      </TableCell>
+                      {composedData.map((data) => (
+                        <TableCell key={`price-${data.month}`} align="right">
+                          {formatPrice(data.avgPrice)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                   </TableBody>
                 </Table>
               </TableContainer>
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ mt: 1, display: 'block' }}
+                sx={{
+                  mr: 2,
+                  mt: 2,
+                  display: 'block',
+                  alignSelf: 'flex-end',
+                  textAlign: 'right',
+                }}
               >
                 表格單位：千元，數據來自公開資訊觀測站
                 <br />
@@ -431,7 +625,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
           </Card>
         </>
       ) : (
-        <Card sx={{ mt: 2 }}>
+        <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
           <CardContent>
             <Typography>載入中...</Typography>
           </CardContent>
