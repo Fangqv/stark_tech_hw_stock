@@ -1,1 +1,11 @@
+## 规则
+
 - 不用进行任何的 linter 检查
+- 尽量使用函数式组件
+
+## 技术栈
+
+- TypeScript
+- Next.js
+- React.js
+- [MUI](https://mui.com/), MUI offers a comprehensive suite of free UI tools to help you ship new features faster. Start with Material UI, our fully-loaded component library, or bring your own design system to our production-ready components.

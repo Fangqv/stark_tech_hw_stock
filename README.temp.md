@@ -68,3 +68,4 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 - [ ] 最后请一定核对一下 PRD 和 statementdog, 确保没有数据上的 Bug
 - [ ] 在提交前在阅读一遍 notion 上的 PRD, 看看还有没有什么疏漏
 - [ ] 部署至腾讯云
+- [ ] 使用 SSG 优化整个项目, 针对访问频繁的股票, 如台积电, 鸿海, 联发科, 等等, 使用 SSG 优化
