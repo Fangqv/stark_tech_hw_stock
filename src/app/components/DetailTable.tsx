@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -14,6 +14,7 @@ import {
   Box,
   Typography,
   Button,
+  Divider,
 } from '@mui/material'
 import { ComposedData } from '../types'
 
@@ -26,8 +27,8 @@ const formatRevenue = (value: number) => {
 
 const formatPrice = (value: number) => {
   return new Intl.NumberFormat('zh-TW', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -36,6 +37,15 @@ interface DetailTableProps {
 }
 
 const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      const { scrollWidth, clientWidth } = tableContainerRef.current
+      tableContainerRef.current.scrollLeft = scrollWidth - clientWidth
+    }
+  }, [composedData])
+
   return (
     <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
       <CardContent
@@ -51,7 +61,9 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
             詳細數據
           </Button>
         </Box>
+        <Divider />
         <TableContainer
+          ref={tableContainerRef}
           component={Paper}
           sx={{
             boxShadow: 'none',
@@ -59,7 +71,7 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
             maxWidth: '100%',
           }}
         >
-          <Table size="small" sx={{ boxShadow: 'none', minWidth: 800 }}>
+          <Table size="small" sx={{ minWidth: 800 }}>
             <TableHead>
               <TableRow>
                 <TableCell
@@ -68,18 +80,28 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
                     fontWeight: 'bold',
                     position: 'sticky',
                     left: 0,
-                    backgroundColor: 'white',
+                    backgroundColor: '#f5f5f5',
                     zIndex: 1,
                     borderRight: '1px solid #e0e0e0',
+                    fontSize: '0.75rem',
                   }}
                 >
                   指標
                 </TableCell>
-                {composedData.map((data) => (
+                {composedData.map((data, index) => (
                   <TableCell
                     key={data.month}
                     align="right"
-                    sx={{ minWidth: 100, fontWeight: 'bold' }}
+                    sx={{
+                      minWidth: 100,
+                      fontWeight: 'bold',
+                      borderRight:
+                        index < composedData.length - 1
+                          ? '1px solid #e0e0e0'
+                          : 'none',
+                      backgroundColor: '#f5f5f5',
+                      fontSize: '0.75rem',
+                    }}
                   >
                     {data.month}
                   </TableCell>
@@ -87,72 +109,66 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* 營收行 */}
-              <TableRow>
-                <TableCell
+              {[
+                {
+                  label: '每月營收 (千元)',
+                  dataKey: 'revenue',
+                  render: (data: ComposedData) =>
+                    formatRevenue(data.revenue * 1000),
+                },
+                {
+                  label: '單月營收年增率 (%)',
+                  dataKey: 'revenueGrowth',
+                  render: (data: ComposedData) => data.revenueGrowth.toFixed(2),
+                  sx: (data: ComposedData) => ({
+                    color: data.revenueGrowth >= 0 ? 'green' : 'red',
+                  }),
+                },
+                {
+                  label: '月均價 (元)',
+                  dataKey: 'avgPrice',
+                  render: (data: ComposedData) => formatPrice(data.avgPrice),
+                },
+              ].map((row, rowIndex) => (
+                <TableRow
+                  key={row.label}
                   sx={{
-                    fontWeight: 'bold',
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: 'white',
-                    zIndex: 1,
-                    borderRight: '1px solid #e0e0e0',
+                    backgroundColor: rowIndex % 2 === 0 ? '#f9f9f9' : 'white',
                   }}
                 >
-                  每月營收 (千元)
-                </TableCell>
-                {composedData.map((data) => (
-                  <TableCell key={`revenue-${data.month}`} align="right">
-                    {formatRevenue(data.revenue * 1000000)}
-                  </TableCell>
-                ))}
-              </TableRow>
-              {/* 營收年增率行 */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    fontWeight: 'bold',
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: 'white',
-                    zIndex: 1,
-                    borderRight: '1px solid #e0e0e0',
-                  }}
-                >
-                  單月營收年增率 (%)
-                </TableCell>
-                {composedData.map((data) => (
                   <TableCell
-                    key={`growth-${data.month}`}
-                    align="right"
                     sx={{
-                      color: data.revenueGrowth >= 0 ? 'green' : 'red',
+                      fontWeight: 'bold',
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 1,
+                      backgroundColor: rowIndex % 2 === 0 ? 'white' : '#f9f9f9',
+                      borderRight: '1px solid #e0e0e0',
+                      fontSize: '0.75rem',
                     }}
                   >
-                    {data.revenueGrowth.toFixed(2)}
+                    {row.label}
                   </TableCell>
-                ))}
-              </TableRow>
-              {/* 均價行 */}
-              <TableRow>
-                <TableCell
-                  sx={{
-                    fontWeight: 'bold',
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: 'white',
-                    zIndex: 1,
-                    borderRight: '1px solid #e0e0e0',
-                  }}
-                >
-                  月均價 (元)
-                </TableCell>
-                {composedData.map((data) => (
-                  <TableCell key={`price-${data.month}`} align="right">
-                    {formatPrice(data.avgPrice)}
-                  </TableCell>
-                ))}
-              </TableRow>
+                  {composedData.map((data, dataIndex) => (
+                    <TableCell
+                      key={`${row.dataKey}-${data.month}`}
+                      align="right"
+                      sx={{
+                        ...row.sx?.(data),
+                        backgroundColor:
+                          rowIndex % 2 === 0 ? 'white' : '#f9f9f9',
+                        borderRight:
+                          dataIndex < composedData.length - 1
+                            ? '1px solid #e0e0e0'
+                            : 'none',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {row.render(data)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

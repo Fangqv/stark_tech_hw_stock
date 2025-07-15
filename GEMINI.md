@@ -22,3 +22,7 @@
 1. https://finmindtrade.com/analysis/#/data/api
    - 股票的列表：数据集中，技术面的台股总览（TaiwanStockInfo）
    - 每月营收：数据集中，基本面的月营收表（TaiwanStockMonthRevenue）
+
+## 规则
+
+- 不要使用 `npm run dev` 来验证修改, 用户自己会验证

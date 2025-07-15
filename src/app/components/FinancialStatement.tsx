@@ -32,6 +32,7 @@ interface StockInfo {
   change_percent: number
   volume: number
   market_cap: number
+  date: string
 }
 
 interface FinancialStatementProps {
@@ -94,10 +95,12 @@ const StockHeader = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="h6">
                 台灣{' '}
-                {new Date().toLocaleDateString('zh-TW', {
-                  month: '2-digit',
-                  day: '2-digit',
-                })}{' '}
+                {stockInfo.date
+                  ? new Date(stockInfo.date).toLocaleDateString('zh-TW', {
+                      month: '2-digit',
+                      day: '2-digit',
+                    })
+                  : ''}{' '}
                 收盤價 {formatPrice(stockInfo.current_price)} 元
               </Typography>
               <Chip
@@ -137,9 +140,11 @@ const combineDataForChart = (
     monthlyAvgPrices.set(month, avg)
   })
 
-  // 组合营收和价格数据
+  // 组合营收和价格数���
   const result = revenues.map((revenue) => {
-    const month = revenue.date.slice(0, 7)
+    const revenueDate = new Date(revenue.date)
+    revenueDate.setMonth(revenueDate.getMonth() - 1)
+    const month = revenueDate.toISOString().slice(0, 7)
     const avgPrice = monthlyAvgPrices.get(month) || 0
 
     // 计算年增率
@@ -157,9 +162,9 @@ const combineDataForChart = (
       : 0
 
     return {
-      month: revenue.date.slice(0, 7),
+      month: month,
       revenue: revenue.revenue / 1_000_000, // 保持千元單位，不進行轉換
-      avgPrice: Math.round(avgPrice),
+      avgPrice: parseFloat(avgPrice.toFixed(2)),
       revenueGrowth: Math.round(revenueGrowth * 100) / 100,
     }
   })
@@ -180,20 +185,25 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
 
     try {
       const startDate = new Date()
-      startDate.setFullYear(startDate.getFullYear() - parseInt(timeRange))
+      const endDate = new Date()
+      startDate.setFullYear(
+        startDate.getFullYear() - (parseInt(timeRange) + 1),
+      )
+      endDate.setDate(endDate.getDate() - 1) // 昨天
       const startDateStr = startDate.toISOString().slice(0, 10)
+      const endDateStr = endDate.toISOString().slice(0, 10)
 
       const apiToken = process.env.NEXT_PUBLIC_FINMIND_API_TOKEN
 
       // 获取营收数据
       const revenueResponse = await fetch(
-        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMonthRevenue&data_id=${stock.stock_id}&start_date=${startDateStr}&token=${apiToken}`,
+        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMonthRevenue&data_id=${stock.stock_id}&start_date=${startDateStr}&end_date=${endDateStr}&token=${apiToken}`,
       )
       const revenueResult = await revenueResponse.json()
 
       // 获取股价数据
       const priceResponse = await fetch(
-        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.stock_id}&start_date=${startDateStr}&token=${apiToken}`,
+        `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.stock_id}&start_date=${startDateStr}&end_date=${endDateStr}&token=${apiToken}`,
       )
       const priceResult = await priceResponse.json()
 
@@ -201,7 +211,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
         const revenues = revenueResult.data
         setRevenueData(revenues)
 
-        if (priceResult.msg === 'success') {
+        if (priceResult.msg === 'success' && priceResult.data.length > 0) {
           const prices = priceResult.data
 
           // 模拟当前股票信息
@@ -219,6 +229,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
               change_percent: changePercent,
               volume: latestPrice.Trading_Volume || 0,
               market_cap: 0, // 需要额外计算
+              date: latestPrice.date,
             })
           }
 

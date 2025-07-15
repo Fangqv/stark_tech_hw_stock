@@ -39,8 +39,8 @@ const formatRevenue = (value: number) => {
 
 const formatPrice = (value: number) => {
   return new Intl.NumberFormat('zh-TW', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -154,6 +154,7 @@ const Chart: React.FC<ChartProps> = ({
             <YAxis yAxisId="right" orientation="right" />
             <YAxis yAxisId="third" orientation="right" />
             <Tooltip
+              animationDuration={50}
               formatter={(value: number | string, name: string) => {
                 const numValue =
                   typeof value === 'string' ? parseFloat(value) : value
@@ -183,6 +184,8 @@ const Chart: React.FC<ChartProps> = ({
                 stroke="#d32f2f"
                 strokeWidth={2}
                 name="月均價"
+                dot={false}
+                activeDot={{ r: 5, fill: '#d32f2f' }}
               />
             )}
             {selectedData.revenueGrowth && (

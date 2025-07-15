@@ -41,6 +41,15 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
               index === self.findIndex((s) => s.stock_id === stock.stock_id),
           )
           setStocks(uniqueStocks)
+
+          // 默认选择 2330 台积电
+          const defaultStock = uniqueStocks.find(
+            (stock) => stock.stock_id === '2330',
+          )
+          if (defaultStock) {
+            setSelectedStock(defaultStock)
+            onStockSelect(defaultStock)
+          }
         }
       } catch (error) {
         console.error('Error fetching stocks:', error)
