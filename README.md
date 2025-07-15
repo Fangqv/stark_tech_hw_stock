@@ -21,6 +21,10 @@ npm install
 npm run dev
 ```
 
+:::note
+请在项目目录下创建: `.env.local` 文件, 并添加 `NEXT_PUBLIC_FINMIND_API_TOKEN` 变量, 值为 finmindtrade 的 API key
+:::
+
 ## 工作历史记录
 
 1. 接收产品需求
