@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import {
   Autocomplete,
   TextField,
@@ -8,65 +9,20 @@ import {
   InputAdornment,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-import { useEffect, useState } from 'react'
+import { StockSearchProps, Stock } from '../types'
+import { useStockSearch } from '../hooks/useStockSearch'
 
-interface Stock {
-  stock_id: string
-  stock_name: string
-}
-
-interface StockSearchProps {
-  onStockSelect: (stock: Stock | null) => void
-}
-
-export default function StockSearch({ onStockSelect }: StockSearchProps) {
-  const [stocks, setStocks] = useState<Stock[]>([])
-  const [selectedStock, setSelectedStock] = useState<Stock | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const fetchStocks = async () => {
-      try {
-        setLoading(true)
-        const apiToken = process.env.NEXT_PUBLIC_FINMIND_API_TOKEN
-        const response = await fetch(
-          `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo&token=${apiToken}`,
-        )
-        const data = await response.json()
-        if (data.msg === 'success') {
-          const uniqueStocks = data.data.filter(
-            (stock: Stock, index: number, self: Stock[]) =>
-              index === self.findIndex((s) => s.stock_id === stock.stock_id),
-          )
-          setStocks(uniqueStocks)
-
-          // 默认选择 2330 台积电
-          const defaultStock = uniqueStocks.find(
-            (stock: { stock_id: string }) => stock.stock_id === '2330',
-          )
-          if (defaultStock) {
-            setSelectedStock(defaultStock)
-            onStockSelect(defaultStock)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching stocks:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStocks()
-  }, [])
-
-  const handleStockChange = (
-    event: React.SyntheticEvent<Element, Event>,
-    newValue: Stock | null,
-  ) => {
-    setSelectedStock(newValue)
-    onStockSelect(newValue)
-  }
+const StockSearch: React.FC<StockSearchProps> = ({ onStockSelect }) => {
+  const {
+    stocks,
+    selectedStock,
+    loading,
+    open,
+    handleStockChange,
+    filterOptions,
+    handleOpen,
+    handleClose,
+  } = useStockSearch(onStockSelect)
 
   return (
     <Autocomplete
@@ -76,16 +32,9 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
       onChange={handleStockChange}
       loading={loading}
       open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      filterOptions={(options, { inputValue }) => {
-        return options.filter(
-          (option) =>
-            option.stock_id.toLowerCase().includes(inputValue.toLowerCase()) ||
-            option.stock_name.toLowerCase().includes(inputValue.toLowerCase()),
-        )
-      }}
-      // 渲染选项
+      onOpen={handleOpen}
+      onClose={handleClose}
+      filterOptions={filterOptions}
       renderOption={(props, option) => {
         const { key, ...rest } = props
         return (
@@ -108,7 +57,6 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
           </Box>
         )
       }}
-      // 渲染输入框
       renderInput={(params) => (
         <TextField
           {...params}
@@ -130,9 +78,10 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
       sx={{
         '& .MuiOutlinedInput-root': {
           backgroundColor: 'background.paper',
-          // height: 50,
         },
       }}
     />
   )
 }
+
+export default StockSearch

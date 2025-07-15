@@ -16,12 +16,9 @@ import {
   Button,
   Divider,
 } from '@mui/material'
-import { ComposedData } from '../types'
-import { formatRevenue, formatPrice } from '../func/format'
-
-interface DetailTableProps {
-  composedData: ComposedData[]
-}
+import { DetailTableProps, ComposedData } from '../types'
+import { formatRevenue, formatPrice, formatPercentage } from '../utils/format'
+import { TABLE_ROW_CONFIG } from '../constants'
 
 const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -33,6 +30,40 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
     }
   }, [composedData])
 
+  const renderCellValue = (data: ComposedData, dataKey: string) => {
+    switch (dataKey) {
+      case 'revenue':
+        return formatRevenue(data.revenue * 1000)
+      case 'revenueGrowth':
+        return formatPercentage(data.revenueGrowth)
+      case 'avgPrice':
+        return formatPrice(data.avgPrice)
+      default:
+        return ''
+    }
+  }
+
+  const getCellStyle = (
+    data: ComposedData,
+    dataKey: string,
+    rowIndex: number,
+  ) => {
+    const baseStyle = {
+      backgroundColor: rowIndex % 2 === 0 ? 'white' : '#f9f9f9',
+      borderRight: '1px solid #e0e0e0',
+      fontSize: '0.75rem',
+    }
+
+    if (dataKey === 'revenueGrowth') {
+      return {
+        ...baseStyle,
+        color: data.revenueGrowth >= 0 ? 'green' : 'red',
+      }
+    }
+
+    return baseStyle
+  }
+
   return (
     <Card elevation={0} sx={{ mt: 2, border: '1px solid #e0e0e0' }}>
       <CardContent
@@ -42,7 +73,6 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
           p: 0,
         }}
       >
-        {/* 詳細數據表格 */}
         <Box sx={{ display: 'flex', gap: 1, mb: 2, ml: 2, mt: 2 }}>
           <Button variant="contained" size="large" disableElevation>
             詳細數據
@@ -96,27 +126,7 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {[
-                {
-                  label: '每月營收 (千元)',
-                  dataKey: 'revenue',
-                  render: (data: ComposedData) =>
-                    formatRevenue(data.revenue * 1000),
-                },
-                {
-                  label: '單月營收年增率 (%)',
-                  dataKey: 'revenueGrowth',
-                  render: (data: ComposedData) => data.revenueGrowth.toFixed(2),
-                  sx: (data: ComposedData) => ({
-                    color: data.revenueGrowth >= 0 ? 'green' : 'red',
-                  }),
-                },
-                {
-                  label: '月均價 (元)',
-                  dataKey: 'avgPrice',
-                  render: (data: ComposedData) => formatPrice(data.avgPrice),
-                },
-              ].map((row, rowIndex) => (
+              {TABLE_ROW_CONFIG.map((row, rowIndex) => (
                 <TableRow
                   key={row.label}
                   sx={{
@@ -141,17 +151,14 @@ const DetailTable: React.FC<DetailTableProps> = ({ composedData }) => {
                       key={`${row.dataKey}-${data.month}`}
                       align="right"
                       sx={{
-                        ...row.sx?.(data),
-                        backgroundColor:
-                          rowIndex % 2 === 0 ? 'white' : '#f9f9f9',
+                        ...getCellStyle(data, row.dataKey, rowIndex),
                         borderRight:
                           dataIndex < composedData.length - 1
                             ? '1px solid #e0e0e0'
                             : 'none',
-                        fontSize: '0.75rem',
                       }}
                     >
-                      {row.render(data)}
+                      {renderCellValue(data, row.dataKey)}
                     </TableCell>
                   ))}
                 </TableRow>
