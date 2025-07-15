@@ -4,7 +4,7 @@
 
 ## 项目说明
 
-🚧 WIP 🚧
+整个项目使用 TypeScript, Next.js, React.js, MUI 开发, 使用 recharts 作为图表组件, 使用 finmindtrade 的 API 获取数据
 
 ## 启动说明
 
@@ -49,6 +49,9 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
         1.  如果都渲染, 那么交互还需要调整
     3.  UI 调整一下
     4.  代码风格
+16. 基本完成
+
+![snapshot.3.png](./snapshots/snapshot.3.png)
 
 ## 技术栈
 
@@ -65,7 +68,7 @@ https://developers.generativeai.google/guide/troubleshooting\",\n    \"status\":
 ## TODO
 
 - [ ] 了解到合作伙伴期望看到结构较好的组件分层, 让我来做一下
-- [ ] 最后请一定核对一下 PRD 和 statementdog, 确保没有数据上的 Bug
-- [ ] 在提交前在阅读一遍 notion 上的 PRD, 看看还有没有什么疏漏
+- [x] 最后请一定核对一下 PRD 和 statementdog, 确保没有数据上的 Bug
+- [x] 在提交前在阅读一遍 notion 上的 PRD, 看看还有没有什么疏漏
 - [ ] 部署至腾讯云
 - [ ] 使用 SSG 优化整个项目, 针对访问频繁的股票, 如台积电, 鸿海, 联发科, 等等, 使用 SSG 优化

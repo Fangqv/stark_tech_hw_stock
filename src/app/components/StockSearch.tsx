@@ -3,7 +3,6 @@
 import {
   Autocomplete,
   TextField,
-  CircularProgress,
   Box,
   Chip,
   InputAdornment,
@@ -44,7 +43,7 @@ export default function StockSearch({ onStockSelect }: StockSearchProps) {
 
           // 默认选择 2330 台积电
           const defaultStock = uniqueStocks.find(
-            (stock) => stock.stock_id === '2330',
+            (stock: { stock_id: string }) => stock.stock_id === '2330',
           )
           if (defaultStock) {
             setSelectedStock(defaultStock)

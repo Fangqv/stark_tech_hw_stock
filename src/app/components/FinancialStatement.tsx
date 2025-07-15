@@ -125,7 +125,7 @@ const combineDataForChart = (
 
   // 按月分组价格数据
   prices.forEach((price) => {
-    const month = price.date.slice(0, 7) // YYYY-MM
+    const month = price.date.slice(0, 4) + '/' + price.date.slice(5, 7) // YYYY/MM
     if (!monthlyPrices.has(month)) {
       monthlyPrices.set(month, [])
     }
@@ -144,7 +144,10 @@ const combineDataForChart = (
   const result = revenues.map((revenue) => {
     const revenueDate = new Date(revenue.date)
     revenueDate.setMonth(revenueDate.getMonth() - 1)
-    const month = revenueDate.toISOString().slice(0, 7)
+    const month =
+      revenueDate.toISOString().slice(0, 4) +
+      '/' +
+      revenueDate.toISOString().slice(5, 7)
     const avgPrice = monthlyAvgPrices.get(month) || 0
 
     // 计算年增率
@@ -163,7 +166,7 @@ const combineDataForChart = (
 
     return {
       month: month,
-      revenue: revenue.revenue / 1_000_000, // 保持千元單位，不進行轉換
+      revenue: revenue.revenue / 1_000_000,
       avgPrice: parseFloat(avgPrice.toFixed(2)),
       revenueGrowth: Math.round(revenueGrowth * 100) / 100,
     }
@@ -186,9 +189,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
     try {
       const startDate = new Date()
       const endDate = new Date()
-      startDate.setFullYear(
-        startDate.getFullYear() - (parseInt(timeRange) + 1),
-      )
+      startDate.setFullYear(startDate.getFullYear() - (parseInt(timeRange) + 1))
       endDate.setDate(endDate.getDate() - 1) // 昨天
       const startDateStr = startDate.toISOString().slice(0, 10)
       const endDateStr = endDate.toISOString().slice(0, 10)
@@ -234,6 +235,7 @@ export default function FinancialStatement({ stock }: FinancialStatementProps) {
           }
 
           // 组合数据用于图表
+          console.log({ revenues, prices, timeRange })
           const combined = combineDataForChart(revenues, prices, timeRange)
           setComposedData(combined)
         }
