@@ -17,20 +17,7 @@ import {
   Divider,
 } from '@mui/material'
 import { ComposedData } from '../types'
-
-const formatRevenue = (value: number) => {
-  return new Intl.NumberFormat('zh-TW', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
-const formatPrice = (value: number) => {
-  return new Intl.NumberFormat('zh-TW', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)
-}
+import { formatRevenue, formatPrice } from '../func/format'
 
 interface DetailTableProps {
   composedData: ComposedData[]

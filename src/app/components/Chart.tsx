@@ -24,6 +24,7 @@ import {
   Label,
 } from 'recharts'
 import { ComposedData } from '../types'
+import { formatPrice, formatRevenue } from '../func/format'
 
 interface ChartProps {
   composedData: ComposedData[]
@@ -113,7 +114,7 @@ const Chart: React.FC<ChartProps> = ({
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart
             data={composedData}
-            margin={{ top: 40, right: 20, left: 20, bottom: 0 }}
+            margin={{ top: 40, right: 20, left: 40, bottom: 0 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -128,7 +129,11 @@ const Chart: React.FC<ChartProps> = ({
               tickLine={false}
             />
             {selectedData.revenue && (
-              <YAxis yAxisId="revenue" orientation="left">
+              <YAxis
+                yAxisId="revenue"
+                orientation="left"
+                tickFormatter={(value) => formatRevenue(value * 1000)}
+              >
                 <Label value="千元" position="insideTop" offset={-30} />
               </YAxis>
             )}
@@ -150,10 +155,35 @@ const Chart: React.FC<ChartProps> = ({
             <Tooltip
               contentStyle={{
                 fontSize: '12px',
+                backgroundColor: '#00000099',
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                borderRadius: '4px',
               }}
               animationDuration={50}
+              itemStyle={{
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+              }}
+              labelStyle={{
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+              }}
+              formatter={(value, name) => {
+                switch (name) {
+                  case '每月營收':
+                    return [
+                      `${formatRevenue((value as number) * 1000)} 千元`,
+                      name,
+                    ]
+                  case '月均價':
+                    return [`${formatPrice(value as number)} 元`, name]
+                  case '單月營收年增率':
+                    return [`${(value as number).toFixed(2)}%`, name]
+                }
+              }}
             />
-            <Legend />
+            <Legend iconType="square" />
             {selectedData.revenue && (
               <Bar
                 animationDuration={200}
